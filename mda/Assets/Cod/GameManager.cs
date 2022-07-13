@@ -34,11 +34,14 @@ public class GameManager : MonoBehaviour
         hitbtn.onClick.AddListener(() => HitClicked());
         standbtn.onClick.AddListener(() => StandClicked());
         betbtn1.onClick.AddListener(() => BetClicked());
+        hitbtn.gameObject.SetActive(false);
+        standbtn.gameObject.SetActive(false);
         //betbtn2.onClick.AddListener(() => BetClicked());
     }
 
     private void StandClicked()
     {
+        hitbtn.gameObject.SetActive(false);
         hidecard.GetComponent<Renderer>().enabled = false;
         betbtn1.interactable = false;
         standClicks++;
@@ -73,7 +76,10 @@ public class GameManager : MonoBehaviour
 
     private void DealClicked()
     {
-        betbtn1.interactable = true;
+        
+        hitbtn.gameObject.SetActive(true);
+        standbtn.gameObject.SetActive(true);
+        betbtn1.interactable = false;
         //se pregateste o noura runda 
         player.ResetHand();
         dealer.ResetHand();
@@ -94,25 +100,33 @@ public class GameManager : MonoBehaviour
         standbtn.gameObject.SetActive(true);
         standbtnText.text = "Stand";
 
-        pot = 200;
-        if (bani < 100) {
-          
-            betText.text = "Bets: 0$";
-            cashText.text = "0$";
-            maintext.text = "GAME OVER";
-            maintext.gameObject.SetActive(true);
-            hitbtn.gameObject.SetActive(false);
-            Time.timeScale = 0; 
+
+        //Text newBet = betbtn1.GetComponentInChildren(typeof(Text)) as Text;//(schema) luam ca beet suma de pe textul butonului
+        //int inBet = int.Parse(newBet.text.ToString().Remove(0, 1)); // scoatem semnul $
+        if (pot == 0)
+        {
+            pot = 200;
+            
+            betText.text = "Bets: " + pot.ToString() + "$";
+            player.AdjustMoney(-100);
+            bani = bani - 100;
+            cashText.text = player.GetMoney().ToString() + "$";
         }
-        betText.text = "Bets: "+ pot.ToString()+"$";
-        player.AdjustMoney(-100);
-        bani = bani - 100;
-        cashText.text = player.GetMoney().ToString()+"$";
+        else
+        {
+            
+            
+            betText.text = "Bets: " + pot.ToString() + "$";
+           // player.AdjustMoney(-pot);
+           // bani = bani - pot;
+            cashText.text = player.GetMoney().ToString() + "$";
+        }
     }
 
 
     void RoundOver()
     {
+        betbtn1.interactable = true;
         bool playerbust = false;
         bool dealerbust = false;
         bool player21 = false;
@@ -125,13 +139,14 @@ public class GameManager : MonoBehaviour
             player21 = true;
         if (dealer.handvalue == 21)
             dealer21 = true;
-        if (standClicks < 2 && !playerbust && !player21 && !dealer21 && !dealerbust) return;
+        if (standClicks < 2 && !playerbust && !player21 && !dealer21 && !dealerbust) return ;
         bool roundOver = true;
         if (playerbust || (!dealerbust && dealer.handvalue > player.handvalue))
         {
             if(playerbust)
             { hidecard.GetComponent<Renderer>().enabled = false; }
             maintext.text = "DEALER WINS!";
+            
         }
         else if (dealerbust || player.handvalue > dealer.handvalue)
         {
@@ -139,21 +154,25 @@ public class GameManager : MonoBehaviour
            
             bani += pot;
             player.AdjustMoney(pot);
-           
+            
         }
         else if (player.handvalue == dealer.handvalue)
         {
             maintext.text = "PUSH";
             bani += pot / 2;
             player.AdjustMoney(pot / 2);
+            
         }
         else
         {     
             roundOver = false;
+            
         }
         //setam ecranul pentru finalul rundei
         if(roundOver)
         {
+            
+
             hitbtn.gameObject.SetActive(false);
             standbtn.gameObject.SetActive(false);
             dealbtn.gameObject.SetActive(true);
@@ -162,7 +181,20 @@ public class GameManager : MonoBehaviour
             hidecard.GetComponent<Renderer>().enabled = false;
             cashText.text =player.GetMoney().ToString()+"$";
             standClicks = 0;
+            pot = 0;
+            if (bani < 100)
+            {
+
+                betText.text = "Bets: 0$";
+                cashText.text = "0$";
+                maintext.text = "GAME OVER";
+                maintext.gameObject.SetActive(true);
+                hitbtn.gameObject.SetActive(false);
+                dealbtn.gameObject.SetActive(false);
+                Time.timeScale = 0;
+            }
         }
+        
     }
     void BetClicked()
     {
